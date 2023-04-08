@@ -213,7 +213,7 @@ public Action Cmd_OnLoadout(int client, int args)
 void GetPrimaryOfLoadout(int loadout, int player_class,
     int& out_primary_index, int& out_unlock_rank)
 {
-    // Class-specific mappings of loadout index -> (weapon index, rank).
+    // Class-specific mappings of (player class, loadout index) -> (weapon index, rank).
     int loadouts[3][12][2] = {
         // Recon
         {

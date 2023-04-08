@@ -5,7 +5,7 @@
 
 #include <neotokyo>
 
-#define PLUGIN_VERSION "0.1.0"
+#define PLUGIN_VERSION "0.2.0"
 
 // Note: these indices must be in the same order as the neotokyo.inc weapons_primary array!
 enum {
@@ -300,3 +300,25 @@ public MRESReturn GiveNamedItem(int client, DHookReturn hReturn, DHookParam hPar
     ClientCommand(client, "loadoutmenu");
     return MRES_Ignored;
 }
+
+// Backported from SourceMod/SourcePawn SDK for SM < 1.11 compatibility.
+// Used here under GPLv3 license: https://www.sourcemod.net/license.php
+// SourceMod (C)2004-2023 AlliedModders LLC.  All rights reserved.
+#if SOURCEMOD_V_MAJOR <= 1 && SOURCEMOD_V_MINOR < 11
+/**
+ * Retrieves a numeric command argument given its index, from the current
+ * console or server command. Returns false if the argument can not be
+ * completely parsed as an integer.
+ *
+ * @param argnum        Argument number to retrieve.
+ * @param value         Populated with the value of the command argument.
+ * @return              Whether the argument was entirely a numeric value.
+ */
+stock bool GetCmdArgIntEx(int argnum, int &value)
+{
+    char str[12];
+    int len = GetCmdArg(argnum, str, sizeof(str));
+
+    return StringToIntEx(str, value) == len && len > 0;
+}
+#endif

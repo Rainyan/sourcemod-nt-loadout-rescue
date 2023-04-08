@@ -81,7 +81,7 @@ public void OnRoundStart(Event event, const char[] name, bool dontBroadcast)
     }
 }
 
-// For a primary weapon edict, and its corresponding neotokyo.inc primary weapon edict,
+// For a primary weapon edict, and its corresponding neotokyo.inc primary weapon index,
 // fills that weapon with the correct amount of ammmo.
 // Returns a boolean of whether the operation was successful.
 bool FillPrimaryWepAmmo(int wep_edict, int primary_wep_index)

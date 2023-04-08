@@ -1,0 +1,36 @@
+"Games"
+{
+	"NeotokyoSource"
+	{
+		"Signatures"
+		{
+			"Sig_CBasePlayer__GiveNamedItem"
+			{
+				"library"	"server"
+				"windows"	"\x51\x53\x8B\x5C\x24\x0C\x55\x8B\x6C\x24\x14"
+			}
+		}
+		"Functions"
+		{
+			"Fn_CBasePlayer__GiveNamedItem"
+			{
+				"signature"		"Sig_CBasePlayer__GiveNamedItem"
+				"callconv"		"thiscall"
+				"this"			"entity"
+				"hooktype"		"entity"
+				"return"		"cbaseentity"
+				"arguments"
+				{
+					"name"
+					{
+						"type"	"charptr"
+					}
+					"subtype"
+					{
+						"type"	"int"
+					}
+				}
+			}
+		}
+	}
+}

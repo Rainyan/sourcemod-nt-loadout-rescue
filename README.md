@@ -1,4 +1,6 @@
 # sourcemod-nt-loadout-rescue
+Experimental plugin for Neotokyo that provides the following change:
+
 If a player spawns without a primary weapon, let them choose their weapon loadout again.
 
 ## Background

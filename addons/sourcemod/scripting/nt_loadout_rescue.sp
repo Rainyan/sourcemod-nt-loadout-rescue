@@ -81,6 +81,9 @@ public void OnRoundStart(Event event, const char[] name, bool dontBroadcast)
     }
 }
 
+// For a primary weapon edict, and its corresponding neotokyo.inc primary weapon edict,
+// fills that weapon with the correct amount of ammmo.
+// Returns a boolean of whether the operation was successful.
 bool FillPrimaryWepAmmo(int wep_edict, int primary_wep_index)
 {
     if (!IsValidEdict(wep_edict))
@@ -127,6 +130,7 @@ bool FillPrimaryWepAmmo(int wep_edict, int primary_wep_index)
     return true;
 }
 
+// Hook of the native weapons loadout VGUIMenu result
 public Action Cmd_OnLoadout(int client, int args)
 {
     // If the player hasn't spawned in yet, this is their first loadout flow.
@@ -177,9 +181,6 @@ public Action Cmd_OnLoadout(int client, int args)
     GetPrimaryOfLoadout(loadout, player_class, primary_index, unlock_rank);
     if (GetPlayerRank(client) < unlock_rank)
     {
-        // Not using ShowVGUIPanel because it can refire too fast
-        // for the client netprop state to have updated to the correct loadouts.
-        //FakeClientCommand(client, "loadoutmenu");
         return Plugin_Continue;
     }
 
@@ -206,9 +207,13 @@ public Action Cmd_OnLoadout(int client, int args)
     return Plugin_Continue;
 }
 
+// For a given valid loadout index and valid player class,
+// passes by reference the corresponding primary weapon index of neotokyo.inc,
+// and the rank at which that primary weapon unlocks for the player class.
 void GetPrimaryOfLoadout(int loadout, int player_class,
     int& out_primary_index, int& out_unlock_rank)
 {
+    // Class-specific mappings of loadout index -> (weapon index, rank).
     int loadouts[3][12][2] = {
         // Recon
         {
@@ -270,6 +275,7 @@ void GetPrimaryOfLoadout(int loadout, int player_class,
     out_unlock_rank = loadouts[player_class][loadout][1];
 }
 
+// Detour of CBasePlayer::GiveNamedItem
 public MRESReturn GiveNamedItem(int client, DHookReturn hReturn, DHookParam hParams)
 {
     if (_loadout_successful[client])

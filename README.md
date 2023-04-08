@@ -24,6 +24,7 @@ so they can choose a valid loadout. The player will then receive this weapon pos
 
 ## Build requirements
 * SourceMod 1.10 or newer
+  * **If you are using SourceMod older than 1.11**: you also need the [DHooks extension](https://forums.alliedmods.net/showpost.php?p=2588686) for your version of SourceMod. SM 1.11 and newer **do not require this extension**.
 * The [neotokyo.inc include](https://github.com/softashell/sourcemod-nt-include/blob/master/scripting/include/neotokyo.inc), version 1.1 or newer
 
 ## Installation

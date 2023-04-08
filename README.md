@@ -25,3 +25,7 @@ so they can choose a valid loadout. The player will then receive this weapon pos
 ## Build requirements
 * SourceMod 1.11 or newer
 * The [neotokyo.inc include](https://github.com/softashell/sourcemod-nt-include/blob/master/scripting/include/neotokyo.inc), version 1.1 or newer
+
+## Installation
+* Move the compiled .smx binary to addons/sourcemod/plugins
+* Move the gamedata file to addons/sourcemod/gamedata/neotokyo

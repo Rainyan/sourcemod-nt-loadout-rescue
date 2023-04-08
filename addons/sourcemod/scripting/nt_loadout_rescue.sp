@@ -5,7 +5,7 @@
 
 #include <neotokyo>
 
-#define PLUGIN_VERSION "0.2.0"
+#define PLUGIN_VERSION "0.2.1"
 
 // Note: these indices must be in the same order as the neotokyo.inc weapons_primary array!
 enum {
@@ -292,9 +292,10 @@ public MRESReturn GiveNamedItem(int client, DHookReturn hReturn, DHookParam hPar
             if (StrEqual(classname, weapons_primary[i]))
             {
                 _loadout_successful[client] = true;
-                return MRES_Ignored;
+                break;
             }
         }
+        return MRES_Ignored;
     }
 
     ClientCommand(client, "loadoutmenu");

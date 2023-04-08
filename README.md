@@ -28,4 +28,4 @@ so they can choose a valid loadout. The player will then receive this weapon pos
 
 ## Installation
 * Move the compiled .smx binary to `addons/sourcemod/plugins`
-* Move the gamedata file to `addons/sourcemod/gamedata/neotokyo` (create the "neotokyo" in gamedata if it doesn't exist yet)
+* Move the gamedata file to `addons/sourcemod/gamedata/neotokyo` (create the *"neotokyo"* folder in gamedata if it doesn't exist yet)

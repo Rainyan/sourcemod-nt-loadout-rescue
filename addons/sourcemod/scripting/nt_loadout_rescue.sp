@@ -1,11 +1,12 @@
 #pragma semicolon 1
 
 #include <sourcemod>
+#include <sdktools>
 #include <dhooks>
 
 #include <neotokyo>
 
-#define PLUGIN_VERSION "0.2.1"
+#define PLUGIN_VERSION "0.2.2"
 
 // Note: these indices must be in the same order as the neotokyo.inc weapons_primary array!
 enum {

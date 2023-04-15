@@ -7,7 +7,7 @@ If a player spawns without a primary weapon, let them choose their weapon loadou
 In Neotokyo, players can spawn without a primary weapon under the following situations:
 
 #### Player chose a weapon loadout with insufficient XP
-* If a player deranks after the loadout menu was displayed, it won't update.
+* If a player deranks after the loadout menu was displayed, the menu won't update to reflect possible changes in allowed loadouts for that player.
   Choosing a weapon at too high a tier will then leave them without a primary weapon.
   This happens particularly in comp games, where the game gets restarted when it goes live
   but the player chose their initial loadout before that final restart went through.

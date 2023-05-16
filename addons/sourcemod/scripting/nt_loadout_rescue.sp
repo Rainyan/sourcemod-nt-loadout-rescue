@@ -6,7 +6,7 @@
 
 #include <neotokyo>
 
-#define PLUGIN_VERSION "0.2.2"
+#define PLUGIN_VERSION "0.2.3"
 
 // Note: these indices must be in the same order as the neotokyo.inc weapons_primary array!
 enum {
@@ -42,6 +42,16 @@ public Plugin myinfo = {
 
 public void OnPluginStart()
 {
+    FeatureStatus fs = GetFeatureStatus(FeatureType_Capability, FEATURECAP_COMMANDLISTENER);
+    if (fs != FeatureStatus_Available)
+    {
+        SetFailState("No feature CommandListener available");
+    }
+    else if (!AddCommandListener(Cmd_OnLoadout, "loadout"))
+    {
+        SetFailState("Failed to add command listener");
+    }
+
     GameData gd = LoadGameConfigFile("neotokyo/loadout_rescue");
     if (!gd)
     {
@@ -57,8 +67,6 @@ public void OnPluginStart()
         SetFailState("Failed to detour");
     }
     delete gd;
-
-    RegConsoleCmd("loadout", Cmd_OnLoadout);
 
     if (!HookEventEx("game_round_start", OnRoundStart))
     {
@@ -132,7 +140,7 @@ bool FillPrimaryWepAmmo(int wep_edict, int primary_wep_index)
 }
 
 // Hook of the native weapons loadout VGUIMenu result
-public Action Cmd_OnLoadout(int client, int args)
+public Action Cmd_OnLoadout(int client, const char[] command, int argc)
 {
     // If the player hasn't spawned in yet, this is their first loadout flow.
     // Do nothing because we're only interested in the second, backup loadout rescue.
@@ -149,7 +157,7 @@ public Action Cmd_OnLoadout(int client, int args)
 
     // This can happen if a client attempts to get their loadout directly
     // via client console, using incorrect parameters.
-    if (args != 1)
+    if (argc != 1)
     {
         return Plugin_Continue;
     }
@@ -202,6 +210,7 @@ public Action Cmd_OnLoadout(int client, int args)
     // Not sure why it fails, but probably either because we're too early,
     // or because we're essentially inside a weapon spawn logic already in this
     // code path. Regardless, this seems to work well enough.
+    // TODO: is  this still the case with FEATURECAP_COMMANDLISTENER?
     ClientCommand(client, "slot1");
 
     _loadout_successful[client] = true;
@@ -223,7 +232,7 @@ void GetPrimaryOfLoadout(int loadout, int player_class,
             { WEP_JITTE,        RANK_PRIVATE },
             { WEP_SRM_S,        RANK_CORPORAL },
             { WEP_JITTESCOPED,  RANK_CORPORAL },
-            { WEP_ZR68L,        RANK_SERGEANT },
+            { WEP_ZR68L,        RANK_CORPORAL },
             { WEP_ZR68C,        RANK_SERGEANT },
             { WEP_SUPA7,        RANK_LIEUTENANT },
             { WEP_M41S,         RANK_LIEUTENANT },
@@ -251,8 +260,8 @@ void GetPrimaryOfLoadout(int loadout, int player_class,
             { WEP_MPN,          RANK_RANKLESSDOG },
             { WEP_SRM,          RANK_PRIVATE },
             { WEP_ZR68C,        RANK_PRIVATE },
-            { WEP_M41,          RANK_CORPORAL },
-            { WEP_SUPA7,        RANK_CORPORAL },
+            { WEP_M41,          RANK_PRIVATE },
+            { WEP_SUPA7,        RANK_PRIVATE },
             { WEP_MX,           RANK_CORPORAL },
             { WEP_M41S,         RANK_CORPORAL },
             { WEP_MX_S,         RANK_SERGEANT },
@@ -272,8 +281,8 @@ void GetPrimaryOfLoadout(int loadout, int player_class,
         ThrowError("Loadout index out of range: %d", loadout);
     }
 
-    out_primary_index = loadouts[player_class][loadout][0];
-    out_unlock_rank = loadouts[player_class][loadout][1];
+    out_primary_index = loadouts[player_class - 1][loadout][0];
+    out_unlock_rank = loadouts[player_class - 1][loadout][1];
 }
 
 // Detour of CBasePlayer::GiveNamedItem

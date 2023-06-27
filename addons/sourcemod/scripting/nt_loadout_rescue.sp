@@ -205,7 +205,7 @@ public Action Cmd_OnLoadout(int client, const char[] command, int argc)
         ThrowError("Failed to fill rescued primary weapon with ammo");
     }
 
-    // Delegate equipping to the slot command, because things get funkalicious
+    // Defer equipping to the slot command, because things get funkalicious
     // if we try and set the active weapon dataprop in this callback directly.
     // Not sure why it fails, but probably either because we're too early,
     // or because we're essentially inside a weapon spawn logic already in this

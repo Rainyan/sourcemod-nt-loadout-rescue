@@ -16,7 +16,7 @@ In Neotokyo, players can spawn without a primary weapon under the following situ
   and pick the loadout they chose last in their stead.
   If this previous loadout is no longer available for them (deranked or the loadout isn't available
   for their current player class), this player will end up without a primary weapon.
-  This can happen if players go AFK, and then return to find themselves having auto-spawned emptyhanded.
+  This can happen if players go AFK, and then return to find themselves having auto-spawned empty handed.
 
 ## What this plugin does
 If a player spawns without a weapon, this plugin will re-display that weapon loadout menu for them,

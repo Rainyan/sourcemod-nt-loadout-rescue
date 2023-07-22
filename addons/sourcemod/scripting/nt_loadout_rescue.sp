@@ -6,7 +6,7 @@
 
 #include <neotokyo>
 
-#define PLUGIN_VERSION "0.2.3"
+#define PLUGIN_VERSION "0.3.0"
 
 // Note: these indices must be in the same order as the neotokyo.inc weapons_primary array!
 enum {
@@ -52,7 +52,7 @@ public void OnPluginStart()
         SetFailState("Failed to add command listener");
     }
 
-    GameData gd = LoadGameConfigFile("neotokyo/loadout_rescue");
+    Handle gd = LoadGameConfigFile("neotokyo/loadout_rescue");
     if (!gd)
     {
         SetFailState("Failed to load GameData");
@@ -66,7 +66,7 @@ public void OnPluginStart()
     {
         SetFailState("Failed to detour");
     }
-    delete gd;
+    CloseHandle(gd);
 
     if (!HookEventEx("game_round_start", OnRoundStart))
     {

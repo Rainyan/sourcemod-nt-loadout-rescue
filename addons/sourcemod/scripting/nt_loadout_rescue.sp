@@ -7,7 +7,7 @@
 
 #include <neotokyo>
 
-#define PLUGIN_VERSION "0.4.1"
+#define PLUGIN_VERSION "0.4.2"
 
 // Note: these indices must be in the same order as the neotokyo.inc weapons_primary array!
 enum {
@@ -35,7 +35,12 @@ static bool _loadout_successful[NEO_MAXPLAYERS + 1];
 
 ConVar _allow_loadout_change = null;
 
-#if SOURCEMOD_V_MAJOR == 1 && SOURCEMOD_V_MINOR < 11
+// Workaround for cases where the drop would not propagate to nt_ghostcap,
+// for SM range < 1.11 because it wasn't available, and for range 1.11-1.12.6961
+// because it was bugged.
+#define NEED_DROP_FIX (SOURCEMOD_V_MAJOR == 1 && (SOURCEMOD_V_MINOR < 11 || (SOURCEMOD_V_MINOR == 12 && SOURCEMOD_V_REV < 6961)))
+
+#if NEED_DROP_FIX
 static Handle g_hForwardDrop;
 #endif
 
@@ -87,7 +92,7 @@ Useful for DM style modes.", _, true, 0.0, true, 1.0);
     AutoExecConfig();
 }
 
-#if SOURCEMOD_V_MAJOR == 1 && SOURCEMOD_V_MINOR < 11
+#if NEED_DROP_FIX
 public void OnAllPluginsLoaded()
 {
     g_hForwardDrop = CreateGlobalForward("OnGhostDrop", ET_Event, Param_Cell);
@@ -226,7 +231,7 @@ public Action Cmd_OnLoadout(int client, const char[] command, int argc)
             {
                 if (IsWeaponGhost(wep))
                 {
-#if SOURCEMOD_V_MAJOR == 1 && SOURCEMOD_V_MINOR < 11
+#if NEED_DROP_FIX
                     SDKHooks_DropWeapon(client, wep, NULL_VECTOR, NULL_VECTOR);
                     Call_StartForward(g_hForwardDrop);
                     Call_PushCell(client);

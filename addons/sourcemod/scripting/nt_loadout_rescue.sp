@@ -1,12 +1,13 @@
 #pragma semicolon 1
 
 #include <sourcemod>
+#include <sdkhooks>
 #include <sdktools>
 #include <dhooks>
 
 #include <neotokyo>
 
-#define PLUGIN_VERSION "0.3.0"
+#define PLUGIN_VERSION "0.4.1"
 
 // Note: these indices must be in the same order as the neotokyo.inc weapons_primary array!
 enum {
@@ -31,6 +32,12 @@ enum {
 };
 
 static bool _loadout_successful[NEO_MAXPLAYERS + 1];
+
+ConVar _allow_loadout_change = null;
+
+#if SOURCEMOD_V_MAJOR == 1 && SOURCEMOD_V_MINOR < 11
+static Handle g_hForwardDrop;
+#endif
 
 public Plugin myinfo = {
     name = "NT Loadout Rescue",
@@ -68,11 +75,24 @@ public void OnPluginStart()
     }
     CloseHandle(gd);
 
+    _allow_loadout_change = CreateConVar("sm_loadout_rescue_allow_loadout_change",
+        "0", "Whether to allow already spawned players to swap their loadout at any time. \
+Useful for DM style modes.", _, true, 0.0, true, 1.0);
+
     if (!HookEventEx("game_round_start", OnRoundStart))
     {
         SetFailState("Failed to hook event");
     }
+
+    AutoExecConfig();
 }
+
+#if SOURCEMOD_V_MAJOR == 1 && SOURCEMOD_V_MINOR < 11
+public void OnAllPluginsLoaded()
+{
+    g_hForwardDrop = CreateGlobalForward("OnGhostDrop", ET_Event, Param_Cell);
+}
+#endif
 
 public void OnMapEnd()
 {
@@ -142,17 +162,20 @@ bool FillPrimaryWepAmmo(int wep_edict, int primary_wep_index)
 // Hook of the native weapons loadout VGUIMenu result
 public Action Cmd_OnLoadout(int client, const char[] command, int argc)
 {
-    // If the player hasn't spawned in yet, this is their first loadout flow.
-    // Do nothing because we're only interested in the second, backup loadout rescue.
-    if (!IsPlayerAlive(client))
+    if (!_allow_loadout_change.BoolValue)
     {
-        return Plugin_Continue;
-    }
+        // If the player hasn't spawned in yet, this is their first loadout flow.
+        // Do nothing because we're only interested in the second, backup loadout rescue.
+        if (!IsPlayerAlive(client))
+        {
+            return Plugin_Continue;
+        }
 
-    // We've already given this player their weapon loadout this round.
-    if (_loadout_successful[client])
-    {
-        return Plugin_Continue;
+        // We've already given this player their weapon loadout this round.
+        if (_loadout_successful[client])
+        {
+            return Plugin_Continue;
+        }
     }
 
     // This can happen if a client attempts to get their loadout directly
@@ -161,6 +184,7 @@ public Action Cmd_OnLoadout(int client, const char[] command, int argc)
     {
         return Plugin_Continue;
     }
+
     int loadout;
     if (!GetCmdArgIntEx(1, loadout))
     {
@@ -193,6 +217,34 @@ public Action Cmd_OnLoadout(int client, const char[] command, int argc)
         return Plugin_Continue;
     }
 
+    if (_allow_loadout_change.BoolValue)
+    {
+        for(int slot = 0; slot <= 5; ++slot)
+        {
+            int wep = GetEntPropEnt(client, Prop_Send, "m_hMyWeapons", slot);
+            if (IsValidEdict(wep) && GetWeaponSlot(wep) == SLOT_PRIMARY)
+            {
+                if (IsWeaponGhost(wep))
+                {
+#if SOURCEMOD_V_MAJOR == 1 && SOURCEMOD_V_MINOR < 11
+                    SDKHooks_DropWeapon(client, wep, NULL_VECTOR, NULL_VECTOR);
+                    Call_StartForward(g_hForwardDrop);
+                    Call_PushCell(client);
+                    Call_Finish();
+#else
+                    SDKHooks_DropWeapon(client, wep, NULL_VECTOR, NULL_VECTOR, false);
+#endif
+                }
+                else
+                {
+                    RemovePlayerItem(client, wep);
+                    RemoveEdict(wep);
+                }
+                break;
+            }
+        }
+    }
+
     int wep = GivePlayerItem(client, weapons_primary[primary_index]);
     if (wep == -1)
     {
@@ -215,6 +267,22 @@ public Action Cmd_OnLoadout(int client, const char[] command, int argc)
 
     _loadout_successful[client] = true;
     return Plugin_Continue;
+}
+
+// Assumes weapon input to always be a valid NT wep index.
+bool IsWeaponGhost(int weapon)
+{
+    // "weapon_gh" + '\0' == strlen 10.
+    // We assume any non -1 ent index we get is always
+    // a valid NT weapon ent index.
+    char wepName[9 + 1];
+    if (!GetEntityClassname(weapon, wepName, sizeof(wepName)))
+    {
+        return false;
+    }
+
+    // weapon_gHost -- only weapon with letter H on 8th position of its name.
+    return wepName[8] == 'h';
 }
 
 // For a given valid loadout index and valid player class,

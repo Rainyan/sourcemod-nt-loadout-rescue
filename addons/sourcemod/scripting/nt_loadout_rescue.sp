@@ -83,6 +83,8 @@ Useful for DM style modes.", _, true, 0.0, true, 1.0);
     {
         SetFailState("Failed to hook event");
     }
+
+    AutoExecConfig();
 }
 
 #if SOURCEMOD_V_MAJOR == 1 && SOURCEMOD_V_MINOR < 11

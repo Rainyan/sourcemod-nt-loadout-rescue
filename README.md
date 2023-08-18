@@ -30,3 +30,11 @@ so they can choose a valid loadout. The player will then receive this weapon pos
 ## Installation
 * Move the compiled .smx binary to `addons/sourcemod/plugins`
 * Move the gamedata file to `addons/sourcemod/gamedata/neotokyo` (create the *"neotokyo"* folder in gamedata if it doesn't exist yet)
+
+## Configuration
+
+#### Cvars
+
+* *sm_loadout_rescue_allow_loadout_change*
+  * Whether to allow already spawned players to swap their loadout at any time. Useful for DM style modes.
+  * default: `0`, min: `0`, max: `1`

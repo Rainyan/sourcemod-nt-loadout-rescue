@@ -6,7 +6,7 @@
 
 #include <neotokyo>
 
-#define PLUGIN_VERSION "0.3.0"
+#define PLUGIN_VERSION "0.4.0"
 
 // Note: these indices must be in the same order as the neotokyo.inc weapons_primary array!
 enum {
@@ -31,6 +31,8 @@ enum {
 };
 
 static bool _loadout_successful[NEO_MAXPLAYERS + 1];
+
+ConVar _allow_loadout_change = null;
 
 public Plugin myinfo = {
     name = "NT Loadout Rescue",
@@ -67,6 +69,10 @@ public void OnPluginStart()
         SetFailState("Failed to detour");
     }
     CloseHandle(gd);
+
+    _allow_loadout_change = CreateConVar("sm_loadout_rescue_allow_loadout_change",
+        "0", "Whether to allow already spawned players to swap their loadout at any time. \
+Useful for DM style modes.", _, true, 0.0, true, 1.0);
 
     if (!HookEventEx("game_round_start", OnRoundStart))
     {
@@ -142,17 +148,20 @@ bool FillPrimaryWepAmmo(int wep_edict, int primary_wep_index)
 // Hook of the native weapons loadout VGUIMenu result
 public Action Cmd_OnLoadout(int client, const char[] command, int argc)
 {
-    // If the player hasn't spawned in yet, this is their first loadout flow.
-    // Do nothing because we're only interested in the second, backup loadout rescue.
-    if (!IsPlayerAlive(client))
+    if (!_allow_loadout_change.BoolValue)
     {
-        return Plugin_Continue;
-    }
+        // If the player hasn't spawned in yet, this is their first loadout flow.
+        // Do nothing because we're only interested in the second, backup loadout rescue.
+        if (!IsPlayerAlive(client))
+        {
+            return Plugin_Continue;
+        }
 
-    // We've already given this player their weapon loadout this round.
-    if (_loadout_successful[client])
-    {
-        return Plugin_Continue;
+        // We've already given this player their weapon loadout this round.
+        if (_loadout_successful[client])
+        {
+            return Plugin_Continue;
+        }
     }
 
     // This can happen if a client attempts to get their loadout directly
@@ -161,6 +170,7 @@ public Action Cmd_OnLoadout(int client, const char[] command, int argc)
     {
         return Plugin_Continue;
     }
+
     int loadout;
     if (!GetCmdArgIntEx(1, loadout))
     {
@@ -191,6 +201,17 @@ public Action Cmd_OnLoadout(int client, const char[] command, int argc)
     if (GetPlayerRank(client) < unlock_rank)
     {
         return Plugin_Continue;
+    }
+
+    for(int slot = 0; slot <= 5; ++slot)
+    {
+        int wep = GetEntPropEnt(client, Prop_Send, "m_hMyWeapons", slot);
+        if (IsValidEdict(wep) && GetWeaponSlot(wep) == SLOT_PRIMARY)
+        {
+            RemovePlayerItem(client, wep);
+            RemoveEdict(wep);
+            break;
+        }
     }
 
     int wep = GivePlayerItem(client, weapons_primary[primary_index]);

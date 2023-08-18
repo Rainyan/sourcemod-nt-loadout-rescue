@@ -1,12 +1,13 @@
 #pragma semicolon 1
 
 #include <sourcemod>
+#include <sdkhooks>
 #include <sdktools>
 #include <dhooks>
 
 #include <neotokyo>
 
-#define PLUGIN_VERSION "0.4.0"
+#define PLUGIN_VERSION "0.4.1"
 
 // Note: these indices must be in the same order as the neotokyo.inc weapons_primary array!
 enum {
@@ -33,6 +34,10 @@ enum {
 static bool _loadout_successful[NEO_MAXPLAYERS + 1];
 
 ConVar _allow_loadout_change = null;
+
+#if SOURCEMOD_V_MAJOR == 1 && SOURCEMOD_V_MINOR < 11
+static Handle g_hForwardDrop;
+#endif
 
 public Plugin myinfo = {
     name = "NT Loadout Rescue",
@@ -79,6 +84,13 @@ Useful for DM style modes.", _, true, 0.0, true, 1.0);
         SetFailState("Failed to hook event");
     }
 }
+
+#if SOURCEMOD_V_MAJOR == 1 && SOURCEMOD_V_MINOR < 11
+public void OnAllPluginsLoaded()
+{
+    g_hForwardDrop = CreateGlobalForward("OnGhostDrop", ET_Event, Param_Cell);
+}
+#endif
 
 public void OnMapEnd()
 {
@@ -203,14 +215,31 @@ public Action Cmd_OnLoadout(int client, const char[] command, int argc)
         return Plugin_Continue;
     }
 
-    for(int slot = 0; slot <= 5; ++slot)
+    if (_allow_loadout_change.BoolValue)
     {
-        int wep = GetEntPropEnt(client, Prop_Send, "m_hMyWeapons", slot);
-        if (IsValidEdict(wep) && GetWeaponSlot(wep) == SLOT_PRIMARY)
+        for(int slot = 0; slot <= 5; ++slot)
         {
-            RemovePlayerItem(client, wep);
-            RemoveEdict(wep);
-            break;
+            int wep = GetEntPropEnt(client, Prop_Send, "m_hMyWeapons", slot);
+            if (IsValidEdict(wep) && GetWeaponSlot(wep) == SLOT_PRIMARY)
+            {
+                if (IsWeaponGhost(wep))
+                {
+#if SOURCEMOD_V_MAJOR == 1 && SOURCEMOD_V_MINOR < 11
+                    SDKHooks_DropWeapon(client, wep, NULL_VECTOR, NULL_VECTOR);
+                    Call_StartForward(g_hForwardDrop);
+                    Call_PushCell(client);
+                    Call_Finish();
+#else
+                    SDKHooks_DropWeapon(client, wep, NULL_VECTOR, NULL_VECTOR, false);
+#endif
+                }
+                else
+                {
+                    RemovePlayerItem(client, wep);
+                    RemoveEdict(wep);
+                }
+                break;
+            }
         }
     }
 
@@ -236,6 +265,22 @@ public Action Cmd_OnLoadout(int client, const char[] command, int argc)
 
     _loadout_successful[client] = true;
     return Plugin_Continue;
+}
+
+// Assumes weapon input to always be a valid NT wep index.
+bool IsWeaponGhost(int weapon)
+{
+    // "weapon_gh" + '\0' == strlen 10.
+    // We assume any non -1 ent index we get is always
+    // a valid NT weapon ent index.
+    char wepName[9 + 1];
+    if (!GetEntityClassname(weapon, wepName, sizeof(wepName)))
+    {
+        return false;
+    }
+
+    // weapon_gHost -- only weapon with letter H on 8th position of its name.
+    return wepName[8] == 'h';
 }
 
 // For a given valid loadout index and valid player class,
